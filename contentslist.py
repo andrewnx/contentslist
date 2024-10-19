@@ -4,17 +4,26 @@ import os
 
 def list_files(startpath):
     text_output.delete(1.0, tk.END)  # Clear existing text
+    omit_folders = [
+        'node_modules', '.git', 'vendor', '.idea', '.vscode',
+        'storage/logs', 'storage/framework', 'bootstrap/cache',
+        'public', '.phpunit.cache', 'tests'
+    ]
     for root, dirs, files in os.walk(startpath):
-        if 'node_modules' in dirs:
-            dirs.remove('node_modules')  # don't visit node_modules directories
-        if '.git' in dirs:
-            dirs.remove('.git') 
+        # Remove directories to be omitted
+        dirs[:] = [d for d in dirs if d not in omit_folders and d not in ['.env']]
+        
+        # Check if the current directory is a subdirectory of any omitted folder
+        if any(omit_folder in root.split(os.sep) for omit_folder in omit_folders):
+            continue
+        
         level = root.replace(startpath, '').count(os.sep)
         indent = ' ' * 4 * (level)
         text_output.insert(tk.END, '{}{}/\n'.format(indent, os.path.basename(root)))
         subindent = ' ' * 4 * (level + 1)
         for f in files:
-            text_output.insert(tk.END, '{}{}\n'.format(subindent, f))
+            if f != '.env':
+                text_output.insert(tk.END, '{}{}\n'.format(subindent, f))
 
 def on_button_click():
     folder_selected = filedialog.askdirectory()
